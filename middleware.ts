@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { getToken } from "next-auth/jwt";
 
 export async function middleware(request: NextRequest) {
-  const session = await auth();
-  const isAuthenticated = !!session?.user;
+  const token = await getToken({ req: request });
+  const isAuthenticated = !!token;
 
   const publicPaths = ["/", "/login", "/register", "/api/auth"];
   const isPublicPath = publicPaths.some((path) => 
@@ -14,12 +14,26 @@ export async function middleware(request: NextRequest) {
 
   // Check if requesting a public document
   if (request.nextUrl.pathname.startsWith("/documents/")) {
-    return NextResponse.next();
+    const documentId = request.nextUrl.pathname.split("/")[2];
+    if (!documentId) return NextResponse.next();
+
+    try {
+      const res = await fetch(`${request.nextUrl.origin}/api/documents/${documentId}`);
+      const document = await res.json();
+      
+      if (document.isPublic) {
+        return NextResponse.next();
+      }
+    } catch (error) {
+      console.error("Error checking document visibility:", error);
+    }
   }
   
   // Redirect unauthenticated users to login
   if (!isAuthenticated && !isPublicPath) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const url = new URL("/login", request.url);
+    url.searchParams.set("callbackUrl", request.nextUrl.pathname);
+    return NextResponse.redirect(url);
   }
   
   // Redirect authenticated users away from auth pages

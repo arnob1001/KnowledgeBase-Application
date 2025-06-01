@@ -1,7 +1,7 @@
 import { Metadata } from "next";
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
+import { auth } from "@/lib/auth";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import DocumentList from "@/components/dashboard/document-list";
 import RecentActivity from "@/components/dashboard/recent-activity";
@@ -19,42 +19,42 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const documents = await prisma.document.findMany({
-    where: {
-      authorId: session.user.id,
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-    include: {
-      tags: {
-        include: {
-          tag: true,
+  const [documents, recentDocuments, tags] = await Promise.all([
+    prisma.document.findMany({
+      where: {
+        authorId: session.user.id,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
         },
       },
-    },
-    take: 10,
-  });
-
-  const recentDocuments = await prisma.document.findMany({
-    where: {
-      authorId: session.user.id,
-    },
-    orderBy: {
-      updatedAt: "desc",
-    },
-    take: 5,
-  });
-
-  const tags = await prisma.tag.findMany({
-    where: {
-      documents: {
-        some: {
-          userId: session.user.id,
+      take: 10,
+    }),
+    prisma.document.findMany({
+      where: {
+        authorId: session.user.id,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      take: 5,
+    }),
+    prisma.tag.findMany({
+      where: {
+        documents: {
+          some: {
+            userId: session.user.id,
+          },
         },
       },
-    },
-  });
+    }),
+  ]);
 
   return (
     <div className="container mx-auto px-4 py-8">
