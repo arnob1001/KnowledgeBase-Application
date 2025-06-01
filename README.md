@@ -1,5 +1,6 @@
-# DocuMind - AI Knowledge Base
+![Screenshot 2025-06-01 141717](https://github.com/user-attachments/assets/988233d5-b08c-44df-a1b3-194998089212)
 
+# DocuMind - AI Knowledge Base
 DocuMind is a full-stack AI knowledge base application built with Next.js 14, Neon DB, and Prisma. It provides a powerful platform for document management with advanced search capabilities.
 
 ## Features
